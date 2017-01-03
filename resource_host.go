@@ -14,10 +14,10 @@ import (
 func ResourceHost() *schema.Resource {
 	return &schema.Resource{
 		SchemaVersion: 1,
-		Create:        createFunc,
-		Read:          readFunc,
-		Update:        updateFunc,
-		Delete:        deleteFunc,
+		Create:        resourceCMKHostCreate,
+		Read:          resourceCMKHostRead,
+		Update:        resourceCMKHostUpdate,
+		Delete:        resourceCMKHostDelete,
 		Schema: map[string]*schema.Schema{ // List of supported configuration fields for your resource
 			"hostname": &schema.Schema{
 				Type:     schema.TypeString,
@@ -50,8 +50,8 @@ func ResourceHost() *schema.Resource {
 
 
 // The methods defined below will get called for each resource that needs to
-// get created (createFunc), read (readFunc), updated (updateFunc) and deleted (deleteFunc).
-// For example, if 10 resources need to be created then `createFunc`
+// get created (resourceCMKHostCreate), read (resourceCMKHostRead), updated (resourceCMKHostUpdate) and deleted (resourceCMKHostDelete).
+// For example, if 10 resources need to be created then `resourceCMKHostCreate`
 // will get called 10 times every time with the information for the proper
 // resource that is being mapped.
 //
@@ -60,7 +60,7 @@ func ResourceHost() *schema.Resource {
 // will prevent the execution of further calls that depend on that resource
 // that failed to be created/updated/deleted.
 //#----------------------------------------------------------------------------------------
-func createFunc(d *schema.ResourceData, meta interface{}) error {
+func resourceCMKHostCreate(d *schema.ResourceData, meta interface{}) error {
         client := meta.(*cmkapi.Client)
 	hostname := d.Get("hostname").(string)
 	folder := d.Get("folder").(string)
@@ -76,16 +76,32 @@ func createFunc(d *schema.ResourceData, meta interface{}) error {
         return nil
 }
 //#----------------------------------------------------------------------------------------
-func readFunc(d *schema.ResourceData, meta interface{}) error {
-	return nil
-}
+func resourceCMKHostRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*cmkapi.Client)
 
-//#----------------------------------------------------------------------------------------
-func updateFunc(d *schema.ResourceData, meta interface{}) error {
+	hostname := d.Get("hostname").(string)
+
+	host, err := client.ReadHost(hostname)
+	if err != nil {
+		return fmt.Errorf("Failed to Read Host %s : %s", hostname, err)
+	}
+
+	d.SetId("id-" + hostname + "!")
+	d.Set("hostname", host.Hostname)
+	d.Set("folder", host.Folder)
+	d.Set("attribute_alias", host.Attributes.Alias)
+	d.Set("attribute_tag_agent", host.Attributes.TagAgent)
+	d.Set("attribute_tag_criticality", host.Attributes.TagCriticality)
+	d.Set("attribute_ipaddress", host.Attributes.Ipaddress)
+
 	return nil
 }
 //#----------------------------------------------------------------------------------------
-func deleteFunc(d *schema.ResourceData, meta interface{}) error {
+func resourceCMKHostUpdate(d *schema.ResourceData, meta interface{}) error {
+	return nil
+}
+//#----------------------------------------------------------------------------------------
+func resourceCMKHostDelete(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cmkapi.Client)
         hostname := d.Get("hostname").(string)
 	err := client.DeleteHost(hostname)
