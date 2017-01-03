@@ -1,32 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/junaid18183/cmkapi"
 )
 
-type ExampleClient struct {
-	User     string
-	Password   string
-	Host    string
-	Sitename string
-}
-
-type Machine struct {
-	Hostname string
-	Folder   string
-	Alias    string
-	TAG_Agent string
-        TAG_criticality string
-	IPADDRESS string
-}
-
-func (m *Machine) Id() string {
-	return "id-" + m.Hostname + "!"
-}
-
-func (c *ExampleClient) CreateMachine(m *Machine) error {
-	return nil
-}
 
 // Here we define da linked list of all the resources that we want to
 // support in our provider. As an example, if you were to write an AWS provider
@@ -80,36 +59,40 @@ func ResourceHost() *schema.Resource {
 // imply that something went wrong with the modification of the resource and it
 // will prevent the execution of further calls that depend on that resource
 // that failed to be created/updated/deleted.
-
+//#----------------------------------------------------------------------------------------
 func createFunc(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*ExampleClient)
-	machine := Machine{
-		Hostname: d.Get("hostname").(string),
-		Folder: d.Get("folder").(string),
-		Alias:  d.Get("attribute_alias").(string),
-		TAG_Agent:  d.Get("attribute_tag_agent").(string),
-		TAG_criticality:  d.Get("attribute_tag_criticality").(string),
-		IPADDRESS:  d.Get("attribute_ipaddress").(string),
-	}
-
-	err := client.CreateMachine(&machine)
-	if err != nil {
-		return err
-	}
-
-	d.SetId(machine.Id())
-
-	return nil
+        client := meta.(*cmkapi.Client)
+	hostname := d.Get("hostname").(string)
+	folder := d.Get("folder").(string)
+	attribute_alias := d.Get("attribute_alias").(string)
+	attribute_tag_agent := d.Get("attribute_tag_agent").(string)
+	attribute_tag_criticality := d.Get("attribute_tag_criticality").(string)
+	attribute_ipaddress := d.Get("attribute_ipaddress").(string)
+        err := client.CreateHost(hostname,folder,attribute_alias,attribute_tag_agent,attribute_tag_criticality,attribute_ipaddress)
+        if err != nil {
+                return err
+        }
+	d.SetId("id-" + hostname + "!")
+        return nil
 }
-
+//#----------------------------------------------------------------------------------------
 func readFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+//#----------------------------------------------------------------------------------------
 func updateFunc(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
-
+//#----------------------------------------------------------------------------------------
 func deleteFunc(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*cmkapi.Client)
+        hostname := d.Get("hostname").(string)
+	err := client.DeleteHost(hostname)
+	if err != nil {
+		return fmt.Errorf("Failed to Delete Host %s : %s", hostname, err)
+	}
+
 	return nil
 }
+//#----------------------------------------------------------------------------------------

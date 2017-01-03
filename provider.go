@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/junaid18183/cmkapi"
 )
 
 
@@ -45,18 +46,7 @@ func providerSchema() map[string]*schema.Schema {
 }
 
 // This is the function used to fetch the configuration params given
-// to our provider which we will use to initialise a dummy client that interacts with the API.
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	client := ExampleClient{
-		User:     d.Get("user").(string),
-		Password:   d.Get("password").(string),
-		Host:    d.Get("host").(string),
-		Sitename: d.Get("sitename").(string),
-	}
-
-	// You could have some field validations here, like checking that
-	// the API Key is has not expired or that the username/password
-	// combination is valid, etc.
-
-	return &client, nil
+	config,error := cmkapi.NewClient(d.Get("user").(string),d.Get("password").(string),d.Get("host").(string),d.Get("sitename").(string))
+	return config, error
 }

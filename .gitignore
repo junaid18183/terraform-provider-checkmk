@@ -1,2 +1,4 @@
 # Ignore dist file
 terraform-provider-checkmk
+terraform.tfstate
+terraform.tfstate.backup
