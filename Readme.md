@@ -1,160 +1,130 @@
-# Writting Terraform Provider Plugin
+terraform-provider-checkmk
+==========================
 
-Let’s assume that you want to write a Terraform provider for your check_mk provider. 
-In practice, your Terraform configuration file would look like this:
+Terraform Custom Provider for the running check_mk instance.
 
-    provider "checkmk" {
-    user     = "autouser"
-    password = "UPFKWAJJDPJWTOQMOWHY"
-    host     =  "192.168.99.100:32768"
-    sitename = "mva"
-    }
- 
-    resource "checkmk_host" "winxp_1" {
-    hostname = "winxp_1"
-    folder = "os/windows"
-    attribute_alias = "Alias of winxp_1"
-    attribute_tag_agent  = cmk-agent
-    attribute_tag_criticality = "prod"
-    attribute_ipaddress = "127.0.0.1"
-    }
+## Description
+This project is the Terraform Custom Provider for the running check_mk instance.
+This is work in progress. 
+The current version only supports addition and deletion of hosts into the running Check_mk server. 
 
-So, our checkmk provider supports four different fields:
-  - user
-  - password
-  - host
-  - sitename
+## Requirement
 
-We also have a resource called 'host' (notice that because of the way Terraform works the resource name is prefixed with the name of your provider, hence checkmk_host and not just host]) which supports the following fields:
-   - hostname
-   - folder
-   - attribute_alias
-   - attribute_tag_agent
-   - attribute_tag_criticality
-   - attribute_ipaddress
+Before using the provider, make sure you have created the automation user in check-mk. 
+It only supports following attributes for host,
+   * attribute_alias - Comulsory, the host Alias
+   * attribute_tag_agent - You have to use existing tag for tag_agent,the default install of check_mk have either of cmk-agent,snmp-only,snmp-v1,snmp-tcp,ping.
+   * attribute_tag_criticality - You have to use existing tag for tag_criticality,the default install of check_mk have either of prod,critical,test,offline
+[reancloud/cmkapi](https://github.com/reancloud/cmkapi)
 
-#### Lets start  :
+## Usage
 
-First of all you need,
-### main.go - 
- > This will actully calls plugin.Serve, and passes  a “provider” function for plugin that returns a terraform.ResourceProvider
+### Provider Configuration
 ```
-package main
-
-import (
-        "github.com/hashicorp/terraform/plugin"
-)
-
-
-func main() {
-        opts := plugin.ServeOpts{
-                ProviderFunc: Provider,
-        }
-        plugin.Serve(&opts)
+provider "checkmk" {
+  user     = "autouser"
+  password = "UPFKWAJJDPJWTOQMOWHY"
+  host     =  "192.168.99.100:32768"
+  sitename = "mva"
 }
 ```
 
-### provider.go
+##### Argument Reference
 
-The provider.go will defines an provider function that returns an object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
+The following arguments are supported.
 
-The schema.Provider struct has three fields:
-* Schema: List of all the fields for your provider to work.
-In our checkmk example it would be user,password,host,sitename.
-The value of this field is a map[string]*schema.Schema, a linked list where the key is a string and the value is a pointer to a schema.Schema.
+* `user` - (Required) This is the automation user, defined in Check_mk
+* `password` - (Required) This is the password for automation user.
+* `host` - (Required) This is a target Check_mk server, "either dns or IP"
+* `sitename` - (Required) This is a check_mk sitename to be used.
 
-* ResourcesMap: List of resources that you want to support in your Terraform configuration file. 
-> In our checkmk example currently we are dealing with only one resource named host.
-The value for this field is a map[string]*schema.Resource, similar to the one of the Schema field , the difference being that this list points to schema.Resource.
+### Resource Configuration
 
-* ConfigureFunc: This is the function when you need to initialize the api client with the credentials defined in the Schema part.
+#### `checkmk_host`
 ```
-package main
-
-import (
-        "github.com/hashicorp/terraform/helper/schema"
-        "github.com/hashicorp/terraform/terraform"
-)
-
-
-func Provider() terraform.ResourceProvider {
-        return &schema.Provider{ // Source https://github.com/hashicorp/terraform/blob/v0.6.6/helper/schema/provider.go#L20-L43
-                Schema:        providerSchema(),
-                ResourcesMap: map[string]*schema.Resource{
-                        "checkmk_host":   ResourceHost(),
-                },
-                ConfigureFunc: providerConfigure,
-        }
-}
-
-// List of supported configuration fields for your provider.
-// Here we define a linked list of all the fields that we want to
-// support in our provider (api_key, endpoint, timeout & max_retries).
-func providerSchema() map[string]*schema.Schema {
-        return map[string]*schema.Schema{
-                "user": &schema.Schema{
-                        Type:        schema.TypeString,
-                        Required:    true,
-                        Description: "Check_MK WebAPI username",
-                },
-                "password": &schema.Schema{
-                        Type:        schema.TypeString,
-                        Required:    true,
-                        Description: "Check_MK WebAPI password",
-                },
-                "host": &schema.Schema{
-                        Type:        schema.TypeString,
-                        Required:    true,
-                        Description: "Check_MK server host/ip port e.g. 192.168.99.100:32768",
-                },
-                "sitename": &schema.Schema{
-                        Type:        schema.TypeString,
-                        Required:    true,
-                        Description: "Check_MK sitename",
-                },
-        }
-}
-
-// This is the function used to fetch the configuration params given
-// to our provider which we will use to initialise a dummy client that interacts with the API.
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-        client := ExampleClient{
-                User:     d.Get("user").(string),
-                Password:   d.Get("password").(string),
-                Host:    d.Get("host").(string),
-                Sitename: d.Get("sitename").(string),
-        }
-
-        // You could have some field validations here, like checking that
-        // the API Key is has not expired or that the username/password
-        // combination is valid, etc.
-
-        return &client, nil
+resource "checkmk_host" "winxp_1" {
+  hostname = "winxp_1"
+  folder = "os/windows"
+  attribute_alias = "Alias of winxp_1"
+  attribute_tag_agent  = "cmk-agent"
+  attribute_tag_criticality = "prod"
+  attribute_ipaddress = "127.0.0.1"
 }
 ```
 
-### resource_<resourcename>.go
-for each resource defined in ResourcesMap, create a file named resource_<resourcename>.go , e.g. since we have defined a resource named checkmk_host , lets create the file named resource_host.go
-create a function named defined in ResourcesMap for that resource.
+##### Argument Reference
 
-Now resource declaration has its own structure which is made out of a 
-* schema.Schema (this is pretty much similar to schema.Provider) 
-* SchemaVersion
-* And most importnlly the Create, Read, Update & Delete. 
-These are the four operations that Terraform will perform over the resources of your infrastructure and they will be called according to the case for each resource. 
-This means that if you are creating four resources the Create function will be called four times. The same applies for the rest of the cases.
-The signature for these functions is func(*ResourceData, interface{}).
+The following arguments are supported.
 
-The ResourceData type will provide you with some goodies for getting the values from the configuration:
-Get(key string): fetches the value for the given key. If the given key is not defined in the structure it will return nil. e.g. Hostname: d.Get("hostname").(string),
-	If the key has not been set in the configuration file then it will return the key’s type’s default value (0 for integers, “” for strings and so on).
-GetChange(key string): Returns the old and new value for the given key.
-HasChange(key string): Returns whether or not the given key has been changed.
-SetId(): Sets the id for the given resource. **If set to blank then the resource will be marked for deletion.
-It also offers a couple more methods (GetOk, Set, ConnInfo, SetPartial) need to resarch on that.
+* `hostname` - (Required) Hostname of the host to be added.
+* `folder` - (Required) The WATO Path or Folder under which the host to be created. If the folder doesnt exist,it will be created. 
+* `attribute_alias` - (Required) Alias of host.
+* `attribute_tag_agent` - (Required) The Agent tag of the host. You need to use existing Tags defined in WATO. The default installtion has - cmk-agent,snmp-only,snmp-v1,snmp-tcp,ping
+* `attribute_tag_criticality` - (Required) The Criticality tag for the host. You need to use existing Tags defined in WATO. The default installtion has prod,critical,test,offline
+* `attribute_ipaddress` - (Required) The IPADDRESSS of the host.
 
-**Since we dont have any actual check_mk api defined we are using the dummy ExampleClient and Machine functions. ( I will update once I Have actual api written for check_mk)
-[Juned Memon] 
+##### For example
 
+Example 1: Standalone
+```
+provider "checkmk" {
+  user     = "autouser"
+  password = "UPFKWAJJDPJWTOQMOWHY"
+  host     =  "192.168.99.100:32768"
+  sitename = "mva"
+}
 
+resource "checkmk_host" "winxp_1" {
+  hostname = "winxp_1"
+  folder = "os/windows"
+  attribute_alias = "Alias of winxp_1"
+  attribute_tag_agent  = "cmk-agent"
+  attribute_tag_criticality = "prod"
+  attribute_ipaddress = "127.0.0.1"
+}
+```
+
+Example 2: With Other Provisioner
+```
+# Configure the Docker provider
+provider "docker" {
+    host = "tcp://192.168.99.100:2376/"
+    cert_path = "/vagrant/docker-certs"
+}
+
+# Create a container
+resource "docker_container" "centos" {
+    image = "${docker_image.centos.latest}"
+    name = "centos"
+    count = 1
+    must_run = "true"
+    command  = ["tail" ,"-f" ,"/dev/null"]
+}
+resource "docker_image" "centos" {
+    name = "centos:6.8"
+    keep_locally = 1
+}
+##########################################################################################
+provider "checkmk" {
+  user     = "autouser"
+  password = "UPFKWAJJDPJWTOQMOWHY"
+  host     =  "192.168.99.100:32768"
+  sitename = "mva"
+}
+
+resource "checkmk_host" "centos-container" {
+  depends_on = ["docker_container.centos"]
+  hostname = "${docker_container.centos.name}"
+  folder = "os/linux"
+  attribute_alias = "Docker container"
+  attribute_tag_agent  = "ping"
+  attribute_tag_criticality = "test"
+  attribute_ipaddress = "${docker_container.centos.ip_address}"
+}
+
+```
+
+## Author
+
+[junaid18183](https://github.com/junaid18183)
 
