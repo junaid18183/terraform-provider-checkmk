@@ -25,22 +25,26 @@ func providerSchema() map[string]*schema.Schema {
 		"user": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("CMK_USER",nil),
 			Description: "Check_MK WebAPI username",
 		},
 		"password": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("CMK_PASSWORD",nil),
 			Description: "Check_MK WebAPI password",
 		},
 		"host": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("CMK_HOST",nil),
 			Description: "Check_MK server host/ip port e.g. 192.168.99.100:32768",
 		},
 		"sitename": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Check_MK sitename",
+			DefaultFunc: schema.EnvDefaultFunc("CMK_SITE",nil),
 		},
 	}
 }

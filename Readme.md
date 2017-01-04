@@ -33,10 +33,10 @@ provider "checkmk" {
 
 The following arguments are supported.
 
-* `user` - (Required) This is the automation user, defined in Check_mk
-* `password` - (Required) This is the password for automation user.
-* `host` - (Required) This is a target Check_mk server, "either dns or IP"
-* `sitename` - (Required) This is a check_mk sitename to be used.
+* `user` - (Required) This is the automation user, defined in Check_mk. If this is blank, the CMK_USER environment variable will also be read.
+* `password` - (Required) This is the password for automation user. If this is blank, the CMK_PASSWORD environment variable will also be read.
+* `host` - (Required) This is a target Check_mk server, "either dns or IP". If this is blank, the CMK_HOST environment variable will also be read.
+* `sitename` - (Required) This is a check_mk sitename to be used. If this is blank, the CMK_SITE environment variable will also be read.
 
 ### Resource Configuration
 
