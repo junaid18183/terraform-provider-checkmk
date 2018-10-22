@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/junaid18183/cmkapi"
-)
 
+	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/stefankoop/cmkapi"
+)
 
 // Here we define da linked list of all the resources that we want to
 // support in our provider. As an example, if you were to write an AWS provider
@@ -25,6 +25,10 @@ func ResourceHost() *schema.Resource {
 			},
 			"folder": &schema.Schema{
 				Type:     schema.TypeString,
+				Required: true,
+			},
+			"activate": &schema.Schema{
+				Type:     schema.TypeBool,
 				Required: true,
 			},
 			"attribute_alias": &schema.Schema{
@@ -48,7 +52,6 @@ func ResourceHost() *schema.Resource {
 
 }
 
-
 // The methods defined below will get called for each resource that needs to
 // get created (resourceCMKHostCreate), read (resourceCMKHostRead), updated (resourceCMKHostUpdate) and deleted (resourceCMKHostDelete).
 // For example, if 10 resources need to be created then `resourceCMKHostCreate`
@@ -61,21 +64,24 @@ func ResourceHost() *schema.Resource {
 // that failed to be created/updated/deleted.
 //#----------------------------------------------------------------------------------------
 func resourceCMKHostCreate(d *schema.ResourceData, meta interface{}) error {
-        client := meta.(*cmkapi.Client)
+	client := meta.(*cmkapi.Client)
 	hostname := d.Get("hostname").(string)
 	folder := d.Get("folder").(string)
+	activate := d.Get("activate").(bool)
 	attribute_alias := d.Get("attribute_alias").(string)
 	attribute_tag_agent := d.Get("attribute_tag_agent").(string)
 	attribute_tag_criticality := d.Get("attribute_tag_criticality").(string)
 	attribute_ipaddress := d.Get("attribute_ipaddress").(string)
-        err := client.CreateHost(hostname,folder,attribute_alias,attribute_tag_agent,attribute_tag_criticality,attribute_ipaddress)
-        if err != nil {
-                return err
-        }
+	err := client.CreateHost(hostname, folder, activate, attribute_alias, attribute_tag_agent, attribute_tag_criticality, attribute_ipaddress)
+	if err != nil {
+		return err
+	}
 	d.SetId("id-" + hostname + "!")
-        return nil
+	return nil
 }
+
 //#----------------------------------------------------------------------------------------
+
 func resourceCMKHostRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*cmkapi.Client)
 
@@ -85,7 +91,6 @@ func resourceCMKHostRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("Failed to Read Host %s : %s", hostname, err)
 	}
-
 	d.SetId("id-" + hostname + "!")
 	d.Set("hostname", host.Hostname)
 	d.Set("folder", host.Folder)
@@ -96,19 +101,22 @@ func resourceCMKHostRead(d *schema.ResourceData, meta interface{}) error {
 
 	return nil
 }
+
 //#----------------------------------------------------------------------------------------
 func resourceCMKHostUpdate(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
+
 //#----------------------------------------------------------------------------------------
 func resourceCMKHostDelete(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*cmkapi.Client)
-        hostname := d.Get("hostname").(string)
-	err := client.DeleteHost(hostname)
-	if err != nil {
-		return fmt.Errorf("Failed to Delete Host %s : %s", hostname, err)
-	}
+	//client := meta.(*cmkapi.Client)
+	//hostname := d.Get("hostname").(string)
+	//err := client.DeleteHost(hostname)
+	//if err != nil {
+	//	return fmt.Errorf("Failed to Delete Host %s : %s", hostname, err)
+	//}
 
 	return nil
 }
+
 //#----------------------------------------------------------------------------------------
