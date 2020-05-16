@@ -25,7 +25,6 @@ provider "checkmk" {
   user     = "autouser"
   password = "UPFKWAJJDPJWTOQMOWHY"
   host     =  "192.168.99.100:32768"
-  sitename = "mva"
 }
 ```
 
@@ -36,7 +35,6 @@ The following arguments are supported.
 * `user` - (Required) This is the automation user, defined in Check_mk. If this is blank, the CMK_USER environment variable will also be read.
 * `password` - (Required) This is the password for automation user. If this is blank, the CMK_PASSWORD environment variable will also be read.
 * `host` - (Required) This is a target Check_mk server, "either dns or IP". If this is blank, the CMK_HOST environment variable will also be read.
-* `sitename` - (Required) This is a check_mk sitename to be used. If this is blank, the CMK_SITE environment variable will also be read.
 
 ### Resource Configuration
 
@@ -62,6 +60,7 @@ The following arguments are supported.
 * `attribute_tag_agent` - (Required) The Agent tag of the host. You need to use existing Tags defined in WATO. The default installtion has - cmk-agent,snmp-only,snmp-v1,snmp-tcp,ping
 * `attribute_tag_criticality` - (Required) The Criticality tag for the host. You need to use existing Tags defined in WATO. The default installtion has prod,critical,test,offline
 * `attribute_ipaddress` - (Required) The IPADDRESSS of the host.
+* `activate` - (Required) - activate 
 
 ##### For example
 
@@ -71,7 +70,6 @@ provider "checkmk" {
   user     = "autouser"
   password = "UPFKWAJJDPJWTOQMOWHY"
   host     =  "192.168.99.100:32768"
-  sitename = "mva"
 }
 
 resource "checkmk_host" "winxp_1" {
@@ -81,6 +79,7 @@ resource "checkmk_host" "winxp_1" {
   attribute_tag_agent  = "cmk-agent"
   attribute_tag_criticality = "prod"
   attribute_ipaddress = "127.0.0.1"
+  activate = true
 }
 ```
 
@@ -109,7 +108,6 @@ provider "checkmk" {
   user     = "autouser"
   password = "UPFKWAJJDPJWTOQMOWHY"
   host     =  "192.168.99.100:32768"
-  sitename = "mva"
 }
 
 resource "checkmk_host" "centos-container" {
@@ -120,6 +118,7 @@ resource "checkmk_host" "centos-container" {
   attribute_tag_agent  = "ping"
   attribute_tag_criticality = "test"
   attribute_ipaddress = "${docker_container.centos.ip_address}"
+  activate = true
 }
 
 ```
