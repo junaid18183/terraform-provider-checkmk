@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	"github.com/stefankoop/cmkapi"
+	"github.com/junaid18183/cmkapi"
 )
 
 func Provider() terraform.ResourceProvider {

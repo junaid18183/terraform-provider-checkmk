@@ -2,4 +2,5 @@
 terraform-provider-checkmk
 terraform.tfstate
 terraform.tfstate.backup
+.terraform/
 scratchpad.txt

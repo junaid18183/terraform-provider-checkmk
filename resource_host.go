@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/stefankoop/cmkapi"
+	"github.com/junaid18183/cmkapi"
 )
 
 // Here we define da linked list of all the resources that we want to
