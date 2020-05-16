@@ -65,7 +65,7 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: terraform-provider-checkmk
-          path: ~/terraform.d/plugins/linux_amd64
+          path: $HOME/.terraform.d/plugins/linux_amd64
 
       # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
       - name: Terraform Init
