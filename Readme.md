@@ -1,3 +1,5 @@
+![Go](https://github.com/junaid18183/terraform-provider-checkmk/workflows/Go/badge.svg?branch=master)
+
 terraform-provider-checkmk
 ==========================
 
